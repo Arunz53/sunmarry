@@ -1,0 +1,138 @@
+<?php
+session_start();
+require_once 'db.php';
+
+// Ensure required user columns exist to avoid runtime errors (safe, idempotent)
+try {
+    $colStmt = $pdo->query("SHOW COLUMNS FROM users");
+    $cols = $colStmt->fetchAll(PDO::FETCH_ASSOC);
+    $colNames = array_column($cols, 'Field');
+
+    if (!in_array('role', $colNames)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN role ENUM('super_admin', 'manager', 'support') NOT NULL DEFAULT 'support'");
+    }
+    if (!in_array('profiles_viewed', $colNames)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN profiles_viewed INT DEFAULT 0");
+    }
+    if (!in_array('last_login', $colNames)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN last_login DATETIME DEFAULT NULL");
+    }
+} catch (PDOException $e) {
+    // If schema modifications fail (permissions, missing table), continue without breaking login flow.
+    // We intentionally do not expose detailed DB errors to the user here.
+}
+
+$error = '';
+
+if (isset($_GET['error']) && $_GET['error'] === 'credits_expired') {
+    $error = "நீங்கள் உங்கள் அனைத்து பாயிண்ட் -ஐயும் பயன்படுத்திவிட்டீர்கள். மேலாளரைத் தொடர்பு கொள்ளவும்.";
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    if ($username && $password) {
+        // Prepare and execute query
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            // Support secure password_hash() values and fall back to legacy md5() hashes.
+            $storedHash = $user['password'] ?? '';
+            $passwordOk = false;
+
+            // If stored is a password_hash value, use password_verify()
+            if ($storedHash && (password_verify($password, $storedHash))) {
+                $passwordOk = true;
+            } elseif ($storedHash === md5($password)) {
+                // Legacy MD5 match: accept login but upgrade hash to password_hash()
+                $passwordOk = true;
+                try {
+                    $newHash = password_hash($password, PASSWORD_DEFAULT);
+                    $rehashStmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                    $rehashStmt->execute([$newHash, $user['id']]);
+                } catch (PDOException $e) {
+                    // If rehash fails, continue login anyway; do not expose DB errors to user.
+                }
+            }
+
+            if ($passwordOk) {
+                // Do not reset `profiles_viewed` on login — preserve the count across sessions.
+
+                // Update last login
+                $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+                $updateStmt->execute([$user['id']]);
+
+                // Start session and store login info
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                // Some older DBs may not have `role` column; default to empty string if missing
+                $_SESSION['role'] = $user['role'] ?? '';
+
+                // Redirect based on role: support users go directly to profiles.php
+                $redirectTo = 'home.php';
+                $role = $_SESSION['role'] ?? $user['role'] ?? '';
+                if ($role === 'support') {
+                    $redirectTo = 'profiles.php';
+                }
+                header("Location: " . $redirectTo);
+                exit();
+            } else {
+                $error = "❌ தவறான கடவுச்சொல்.";
+            }
+        } else {
+            $error = "❌ பயனர் கிடைக்கவில்லை.";
+        }
+    } else {
+        $error = "பயனர்பெயர் மற்றும் கடவுச்சொல் இரண்டையும் உள்ளிடவும்.";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Marriage Profile System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <?php include 'header.php'; ?>
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow">
+                    <div class="card-header text-center bg-primary text-white">
+                        <h4>Sun Matrimony Login</h4>
+                        <h4>திருமண பதிவு உள்நுழைவு</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($error): ?>
+                            <div class="alert alert-danger text-center">
+                                <?php echo htmlspecialchars($error); ?>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">பயனர்பெயர்</label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="பயனர்பெயரை உள்ளிடவும்" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">கடவுச்சொல்</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="கடவுச்சொல்லை உள்ளிடவும்" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">உள்நுழைக</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <p class="text-center mt-3 text-muted">© <?php echo date('Y'); ?> திருமண பதிவு அமைப்பு</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

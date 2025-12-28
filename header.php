@@ -1,0 +1,73 @@
+<?php
+require_once 'auth.php';
+// Shared header with company logo. Place this file in the project and include it where needed.
+?>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary no-print">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="home.php">
+            <img src="SunLogo.png" alt="Company Logo" class="company-logo me-2">
+           
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'support'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="home.php">சுயவிவரம் உருவாக்கு</a>
+                </li>
+                <?php endif; ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="profiles.php">| சுயவிவரங்களை காண்</a>
+                </li>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin_dashboard.php">| Super Admin Dashboard</a>
+                </li>
+                <?php endif; ?>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'support'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="recycle.php"> | நீக்கம் </a>
+                </li>
+                <?php endif; ?>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'support'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        Profiles: <?php
+                            require_once 'db.php';
+                            $stmt = $pdo->prepare("SELECT profiles_viewed FROM users WHERE id = ?");
+                            $stmt->execute([$_SESSION['user_id']]);
+                            $user = $stmt->fetch();
+                            echo $user['profiles_viewed'] . "/10";
+                        ?>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <li class="nav-item">
+                    <span class="nav-link">
+                        <i class="bi bi-person-circle"></i> 
+                        <?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?> 
+                        <span class="badge bg-info">
+                            <?php 
+                                $role = $_SESSION['role'] ?? '';
+                                $roleDisplay = match($role) {
+                                    'super_admin' => 'Super Admin',
+                                    'manager' => 'Manager',
+                                    'support' => 'Support',
+                                    default => 'User'
+                                };
+                                echo $roleDisplay;
+                            ?>
+                        </span>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">வெளியேறு</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

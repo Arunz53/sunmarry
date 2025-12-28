@@ -1,0 +1,397 @@
+<?php
+require_once 'auth.php';
+requireLogin();
+
+// Only allow super_admin and manager roles
+if (getUserRole() === 'support') {
+    header('Location: access_denied.php');
+    exit();
+}$id = $_GET['id'] ?? null;
+if (!$id) {
+    header('Location: profiles.php');
+    exit();
+}
+
+$stmt = $pdo->prepare("SELECT * FROM profiles WHERE id = ?");
+$stmt->execute([$id]);
+$profile = $stmt->fetch();
+
+if (!$profile) {
+    header('Location: profiles.php');
+    exit();
+}
+
+// Tamil District Names (shortened here — retain your full map if needed)
+$districtsMap = [
+    'Ariyalur' => 'அரியலூர்',
+    'Chennai' => 'சென்னை',
+    'Coimbatore' => 'கோயம்புத்தூர்',
+    'Cuddalore' => 'கடலூர்',
+    'Dharmapuri' => 'தர்மபுரி',
+    'Dindigul' => 'திண்டுக்கல்',
+    'Erode' => 'ஈரோடு',
+    'Kallakurichi' => 'கள்ளக்குறிச்சி',
+    'Kanchipuram' => 'காஞ்சிபுரம்',
+    'Kanyakumari' => 'கன்னியாகுமரி',
+    'Karur' => 'கரூர்',
+    'Krishnagiri' => 'கிருஷ்ணகிரி',
+    'Madurai' => 'மதுரை',
+    'Nagapattinam' => 'நாகப்பட்டினம்',
+    'Namakkal' => 'நாமக்கல்',
+    'Nilgiris' => 'நீலகிரி',
+    'Perambalur' => 'பெரம்பலூர்',
+    'Pudukkottai' => 'புதுக்கோட்டை',
+    'Ramanathapuram' => 'ராமநாதபுரம்',
+    'Salem' => 'சேலம்',
+    'Sivaganga' => 'சிவகங்கை',
+    'Thanjavur' => 'தஞ்சாவூர்',
+    'Theni' => 'தேனி',
+    'Thoothukudi' => 'தூத்துக்குடி',
+    'Tiruchirappalli' => 'திருச்சிராப்பள்ளி',
+    'Tirunelveli' => 'திருநெல்வேலி',
+    'Tiruppur' => 'திருப்பூர்',
+    'Tiruvallur' => 'திருவல்லூர்',
+    'Tiruvannamalai' => 'திருவண்ணாமலை',
+    'Tiruvarur' => 'திருவாரூர்',
+    'Vellore' => 'வேலூர்',
+    'Viluppuram' => 'விழுப்புரம்',
+    'Virudhunagar' => 'விருதுநகர்'
+];
+?>
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <style>
+        @media print {
+            body, html {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+            }
+            .container, .profile-container, .left-side, .right-side, .supporting-doc {
+                box-sizing: border-box;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .profile-container {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                page-break-inside: avoid;
+            }
+            .left-side {
+                width: 30%;
+                padding: 10px;
+            }
+            .right-side {
+                width: 70%;
+                padding: 10px;
+            }
+            .supporting-doc {
+                margin-top: 10px;
+                text-align: center;
+                page-break-inside: avoid;
+            }
+            .supporting-doc img {
+                max-width: 700px;
+                max-height: 900px;
+                width: 100%;
+                height: auto;
+               
+                margin: 10px auto;
+                display: block;
+            }
+            .footer {
+                position: absolute;
+                bottom: 10mm;
+                left: 8mm;
+                right: 8mm;
+                text-align: center;
+                font-size: 11px;
+                color: #888;
+            }
+            /* Hide print button or any non-print elements if present */
+            .no-print { display: none !important; }
+        }
+    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Print Profile - Sun Matrimony</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* A4 single page */
+@page { size: A4 portrait; margin: 8mm; }
+
+html, body {
+    height: 100%;
+    margin: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-family: 'Latha', sans-serif;
+}
+
+/* Don't force all elements to be bold (that increases layout size). Keep headings bold only. */
+body { font-weight: 600; }
+
+.header, .header p, .header img { font-weight: 700; }
+
+.print-layout {
+    width: 210mm;
+    height: 297mm; /* force exact A4 height */
+    max-height: 297mm;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 8mm;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* ensure content doesn't flow to a second page */
+    page-break-after: avoid;
+    page-break-inside: avoid;
+}
+
+/* Header */
+.header { text-align: center; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 6px; }
+.header p { margin: 0; font-size: 12px; }
+
+/* Main content area */
+.profile-container {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex: 0 0 auto;
+}
+
+/* Left side: two stacked images */
+.left-side {
+    width: 36%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Constrain combined heights so page stays single-sheet */
+.left-side .photo-wrap {
+    width: 100%;
+    display: block;
+    text-align: center;
+}
+
+/* Each photo sizing */
+.left-side img {
+    width: 90%;
+    max-width: 100%;
+    /* both images together should not exceed ~120mm */
+    max-height: 100mm; /* reduce image heights to fit single page */
+    height: auto;
+    object-fit: cover;
+   
+    display: block;
+}
+
+/* Right side: details */
+.right-side {
+    width: 64%;
+    font-size: 11px; /* slightly smaller text to help fit everything */
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.right-side table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+}
+
+.right-side th {
+    text-align: left;
+    width: 42%;
+    padding: 4px 6px;
+    background-color: #f8f9fa;
+    border-radius: 4px 0 0 4px;
+    vertical-align: top;
+}
+
+.right-side td {
+    padding: 4px 6px;
+    background-color: #fff;
+    border-radius: 0 4px 4px 0;
+    border-left: 2px solid #dee2e6;
+    vertical-align: top;
+}
+
+/* Supporting Document large at bottom full width */
+.supporting-doc {
+    width: 100%;
+    margin-top: 12px;
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+    page-break-inside: avoid;
+    page-break-after: auto;
+}
+
+/* big heading */
+.supporting-doc h3 {
+    font-size: 18px;
+    margin: 6px 0 10px;
+}
+
+/* Make supporting doc occupy wide area; limit height to keep single page */
+.supporting-doc img {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: 70mm; /* lower to keep everything on one page */
+    height: auto;
+    object-fit: contain;
+    
+    page-break-inside: avoid;
+}
+
+/* Placeholder if no doc */
+.supporting-doc .no-doc {
+    display: inline-block;
+    padding: 36px;
+    
+    max-width: 90%;
+}
+
+/* Footer */
+.footer { text-align: center; font-size: 11px; color: #666; margin-top: 8px; }
+
+/* Print adjustments */
+@media print {
+    .no-print { display: none; }
+    .print-layout { box-shadow: none; padding: 6mm; }
+    .header { border-bottom-width: 1px; }
+}
+</style>
+</head>
+<body>
+
+<div class="no-print text-center mt-3" style="margin:8px;">
+    <button onclick="window.print()" class="btn btn-primary">🖨️ Print</button>
+    <a href="profiles.php" class="btn btn-secondary">⬅️ Back</a>
+</div>
+
+<div class="print-layout">
+    <div class="header">
+        <img src="SunLogo.png" alt="Company Logo" style="max-height:36px;">
+        <p>www.sunmatri.in | +91 86400 90400 | +91 63793 99175</p>
+        <p>Profile ID: <strong><?php echo htmlspecialchars($profile['id']); ?></strong></p>
+    </div>
+
+    <div class="profile-container">
+        <!-- Left: two photos stacked -->
+        <div class="left-side">
+            <div class="photo-wrap">
+                <?php if (!empty($profile['profile_photo'])): ?>
+                    <img src="<?php echo htmlspecialchars($profile['profile_photo']); ?>" alt="Profile Photo">
+                <?php else: ?>
+                    <div style="border:2px dashed #ffffffff; padding:20px; max-width:100%;"></div>
+                <?php endif; ?>
+            </div>
+
+            <div class="photo-wrap">
+                <?php
+                // try multiple field names for second photo
+                $secondPhoto = $profile['photo2'] ?? $profile['photo_secondary'] ?? $profile['other_photo'] ?? '';
+                if (!empty($secondPhoto)): ?>
+                    <img src="<?php echo htmlspecialchars($secondPhoto); ?>" alt="Second Photo">
+                <?php else: ?>
+                   
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Right: details -->
+        <div class="right-side">
+            <table>
+                    <tr><th>திருமண வகை:</th><td>
+                    <?php
+                    $type = $profile['marriage_type'] ?? '';
+                    if ($type === 'First') echo 'முதல்மணம்';
+                    elseif ($type === 'Second') echo 'இரண்டாம் திருமணம்';
+                    else echo htmlspecialchars($type);
+                    ?>
+                </td></tr>
+                <tr><th>பெயர்:</th><td><?php echo htmlspecialchars($profile['name']); ?></td></tr>
+<tr><th>பிறந்த தேதி:</th><td><?php
+                    if (!empty($profile['birth_date'])) {
+                        $d = DateTime::createFromFormat('Y-m-d', $profile['birth_date']);
+                        echo $d ? $d->format('d-m-Y') : htmlspecialchars($profile['birth_date']);
+                    }
+                ?></td></tr>
+                <tr><th>பிறந்த நேரம்:</th><td><?php echo htmlspecialchars($profile['birth_time']); ?></td></tr>
+
+
+
+                <tr><th>பிறந்த ஊர்:</th><td><?php echo htmlspecialchars($profile['birth_place'] ?? ''); ?></td></tr>
+                
+                <tr><th>ராசி:</th><td><?php echo htmlspecialchars($profile['rasi']); ?></td></tr>
+                <tr><th>நட்சத்திரம்:</th><td><?php echo htmlspecialchars($profile['nakshatram']); ?></td></tr>
+                
+                
+                
+                <tr><th>சாதி:</th><td><?php
+                    $casteDisplay = $profile['caste'] ?? '';
+                    if (!empty($profile['subcaste'])) {
+                        $casteDisplay .= ' / ' . $profile['subcaste'];
+                    }
+                    echo htmlspecialchars($casteDisplay);
+                ?></td></tr>
+                <tr><th>குலம் (கோத்திரம்):</th><td><?php echo htmlspecialchars($profile['kulam']); ?></td></tr>
+
+                <tr><th>தொழில்:</th><td><?php echo htmlspecialchars($profile['profession']); ?></td></tr>
+                <tr><th>மாவட்டம்:</th><td>
+<?php
+    $districtEn = $profile['district'];
+    $districtTa = '';
+    foreach ($districtsMap as $en => $ta) {
+        if (strcasecmp(trim($en), trim($districtEn)) === 0) {
+            $districtTa = $ta;
+            break;
+        }
+    }
+    echo htmlspecialchars($districtTa ?: $districtEn);
+?>
+                </td></tr>
+
+
+
+
+                <tr><th>வசிக்கும் ஊர்:</th><td><?php echo htmlspecialchars($profile['city']); ?></td></tr>
+                
+                
+                
+                <tr><th>சகோதரர்கள் (மொத்தம்):</th><td><?php echo htmlspecialchars($profile['brothers_total']); ?></td></tr>
+                <tr><th>சகோதரர்கள் (திருமணமான):</th><td><?php echo htmlspecialchars($profile['brothers_married']); ?></td></tr>
+                <tr><th>சகோதரிகள் (மொத்தம்):</th><td><?php echo htmlspecialchars($profile['sisters_total']); ?></td></tr>
+                <tr><th>சகோதரிகள் (திருமணமான):</th><td><?php echo htmlspecialchars($profile['sisters_married']); ?></td></tr>
+            </table>
+            </table>
+        </div>
+    </div>
+
+    <!-- Supporting Document: full width, big, at bottom -->
+    <div class="supporting-doc">
+        <h3></h3>
+        <?php if (!empty($profile['file_upload'])): ?>
+            <img src="<?php echo htmlspecialchars($profile['file_upload']); ?>" alt="Supporting Document">
+        <?php else: ?>
+            <div class="no-doc"></div>
+        <?php endif; ?>
+    </div>
+
+    <div class="footer">Printed on <?php echo date('d F Y'); ?> — Sun Matrimony / Hifive web design +91 63744 97528</div>
+</div>
+
+</body>
+</html>

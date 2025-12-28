@@ -1,0 +1,225 @@
+/* Custom styles for Marriage Profile System */
+
+body {
+  background-color: #f8f9fa;
+}
+
+/* Form styles */
+.form-label {
+  font-weight: 500;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Profile photo preview */
+.img-thumbnail {
+  max-height: 200px;
+  width: auto;
+}
+
+/* Table styles */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Button spacing */
+.btn + .btn {
+  margin-left: 5px;
+}
+
+/* Navbar customization */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Company logo in navbar */
+.company-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 576px) {
+  .company-logo {
+    height: 30px;
+  }
+}
+
+/* Print layout */
+@media print {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .card {
+    border: none;
+    box-shadow: none;
+  }
+
+  body {
+    background-color: white;
+  }
+}
+
+/* Form validation styles */
+.was-validated .form-check-input:invalid ~ .form-check-label,
+.was-validated .form-check-input:valid ~ .form-check-label {
+  color: inherit;
+}
+
+/* Custom file input */
+.form-control[type="file"] {
+  padding: 0.375rem 0.75rem;
+}
+
+/* Profile card */
+.profile-card {
+  transition: transform 0.2s;
+}
+
+.profile-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Filter section */
+.filter-section {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Pagination customization */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  color: #0d6efd;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.bg-primary {
+  --bs-bg-opacity: 1;
+  background-color: rgb(255 219 0) !important;
+}
+
+.nav-link {
+  color: rgb(0 0 0) !important;
+}
+
+/* New UI form styles */
+.form-section-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+  color: #212529;
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02));
+  margin: 1rem 0 1.25rem 0;
+}
+
+.input-icon .input-group-text {
+  background: transparent;
+  border-right: 0;
+}
+
+.profile-card .card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Make section cards more prominent */
+.card.section-card {
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+.card.section-card .card-header {
+  background: linear-gradient(
+    90deg,
+    rgba(13, 110, 253, 0.06),
+    rgba(255, 193, 7, 0.03)
+  );
+  font-weight: 600;
+  color: #0d6efd;
+}
+.card.section-card .card-body {
+  background: #fff;
+  padding: 1rem 1.25rem;
+}
+
+.form-label {
+  font-size: 0.95rem;
+}
+
+/* Make inputs and selects a bit larger for touch */
+input.form-control,
+select.form-select {
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.45rem;
+}
+
+/* Improve submit/secondary button visuals */
+.btn-primary {
+  background: linear-gradient(90deg, #0d6efd, #ffdbe0 100%);
+  border: none;
+  color: #000;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: #e9ecef;
+  color: #000;
+}
+
+.muted-small {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Slightly larger select boxes on small screens for touch friendliness */
+select.form-select,
+input.form-control,
+.form-control[type="file"] {
+  min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+/* Force single-column layout for the create form (makes col-md-6 full width) */
+@media (min-width: 768px) {
+  .single-column-force .col-md-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+.mt-4 {
+  margin-bottom: 55px;
+}

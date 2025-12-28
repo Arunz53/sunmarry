@@ -1,0 +1,4 @@
+# Redirect root domain to login.php
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^(www\.)?sunmarry\.in$ [NC]
+RewriteRule ^$ login.php [L,R=301]
