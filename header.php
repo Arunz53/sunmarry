@@ -18,9 +18,11 @@ require_once 'auth.php';
                     <a class="nav-link" href="home.php">சுயவிவரம் உருவாக்கு</a>
                 </li>
                 <?php endif; ?>
+                <?php if (isset($_SESSION['role'])): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="profiles.php">| சுயவிவரங்களை காண்</a>
                 </li>
+                <?php endif; ?>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin'): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="admin_dashboard.php">| Super Admin Dashboard</a>
