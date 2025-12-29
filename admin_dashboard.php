@@ -56,6 +56,10 @@ try {
     $hasProfilesViewedCol = false;
 }
 
+// Handle search
+$searchName = isset($_GET['search_name']) ? trim($_GET['search_name']) : '';
+$searchPhone = isset($_GET['search_phone']) ? trim($_GET['search_phone']) : '';
+
 // Build a dynamic query that includes all available columns
 $sql = "SELECT id, username, role, last_login";
 if ($hasProfilesViewedCol) {
@@ -71,11 +75,27 @@ if ($hasCreatedAtCol) {
 } else {
     $sql .= ", NULL as created_at";
 }
-$sql .= " FROM users WHERE role != 'super_admin' ORDER BY role, username";
+$sql .= " FROM users WHERE role != 'super_admin'";
+$params = [];
+if ($searchName !== '') {
+    $sql .= " AND username LIKE :search_name";
+    $params[':search_name'] = "%$searchName%";
+}
+if ($searchPhone !== '') {
+    $sql .= " AND phone LIKE :search_phone";
+    $params[':search_phone'] = "%$searchPhone%";
+}
+$sql .= " ORDER BY role, username";
 
-// Get all admin users except super admin
-$stmt = $pdo->query($sql);
-$users = $stmt->fetchAll();
+// Get all admin users except super admin, with search
+if (!empty($params)) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $users = $stmt->fetchAll();
+} else {
+    $stmt = $pdo->query($sql);
+    $users = $stmt->fetchAll();
+}
 ?>
 <!DOCTYPE html>
 <html lang="ta">
@@ -94,6 +114,7 @@ $users = $stmt->fetchAll();
             <div class="col-md-12">
                 <h2 class="mb-4">Super Admin Dashboard</h2>
                 
+
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3">
@@ -129,6 +150,20 @@ $users = $stmt->fetchAll();
                         </div>
                     </div>
                 </div>
+
+                <!-- Search Form -->
+                <form class="row g-3 mb-4" method="get" action="">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="search_name" placeholder="Search by Name" value="<?php echo htmlspecialchars($searchName); ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="search_phone" placeholder="Search by Mobile Number" value="<?php echo htmlspecialchars($searchPhone); ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="admin_dashboard.php" class="btn btn-secondary">Reset</a>
+                    </div>
+                </form>
 
                 <!-- User Management -->
                 <div class="card">
