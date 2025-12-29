@@ -195,11 +195,39 @@ $districtsMap = [
                                     </tr>
                                     <tr>
                                         <th>தொலைபேசி 1:</th>
-                                        <td><?php echo htmlspecialchars($profile['phone_primary'] ?? ''); ?></td>
+                                        <td><?php
+                                            $phoneVal = $profile['phone_primary'] ?? '';
+                                            if (!empty($phoneVal)) {
+                                                if (getUserRole() === 'manager') {
+                                                    $len = strlen($phoneVal);
+                                                    if ($len > 5) {
+                                                        echo str_repeat('#', $len - 5) . substr($phoneVal, -5);
+                                                    } else {
+                                                        echo $phoneVal;
+                                                    }
+                                                } else {
+                                                    echo htmlspecialchars($phoneVal);
+                                                }
+                                            }
+                                        ?></td>
                                     </tr>
                                     <tr>
                                         <th>தொலைபேசி 2:</th>
-                                        <td><?php echo htmlspecialchars($profile['phone_secondary'] ?? ''); ?></td>
+                                        <td><?php
+                                            $phoneVal = $profile['phone_secondary'] ?? '';
+                                            if (!empty($phoneVal)) {
+                                                if (getUserRole() === 'manager') {
+                                                    $len = strlen($phoneVal);
+                                                    if ($len > 5) {
+                                                        echo str_repeat('#', $len - 5) . substr($phoneVal, -5);
+                                                    } else {
+                                                        echo $phoneVal;
+                                                    }
+                                                } else {
+                                                    echo htmlspecialchars($phoneVal);
+                                                }
+                                            }
+                                        ?></td>
                                     </tr>
                                     <tr>
                                         <th>குறிப்பு:</th>
