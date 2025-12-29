@@ -13,8 +13,68 @@ $stats = [
     'active_profiles' => $pdo->query("SELECT COUNT(*) FROM profiles WHERE deleted_at IS NULL")->fetchColumn()
 ];
 
+// Check which columns exist in the users table
+try {
+    $colStmt = $pdo->query("SHOW COLUMNS FROM users");
+    $cols = $colStmt->fetchAll(PDO::FETCH_ASSOC);
+    $colNames = array_column($cols, 'Field');
+    
+    $hasPhoneCol = in_array('phone', $colNames);
+    $hasCreatedAtCol = in_array('created_at', $colNames);
+    $hasProfilesViewedCol = in_array('profiles_viewed', $colNames);
+    
+    // Auto-add missing columns
+    if (!$hasPhoneCol) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN phone VARCHAR(20) DEFAULT NULL");
+            $hasPhoneCol = true;
+        } catch (Exception $e) {
+            // Column might already exist or other error
+        }
+    }
+    
+    if (!$hasCreatedAtCol) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+            $hasCreatedAtCol = true;
+        } catch (Exception $e) {
+            // Column might already exist or other error
+        }
+    }
+    
+    if (!$hasProfilesViewedCol) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN profiles_viewed INT DEFAULT 0");
+            $hasProfilesViewedCol = true;
+        } catch (Exception $e) {
+            // Column might already exist or other error
+        }
+    }
+} catch (Exception $e) {
+    $hasPhoneCol = false;
+    $hasCreatedAtCol = false;
+    $hasProfilesViewedCol = false;
+}
+
+// Build a dynamic query that includes all available columns
+$sql = "SELECT id, username, role, last_login";
+if ($hasProfilesViewedCol) {
+    $sql .= ", profiles_viewed";
+}
+if ($hasPhoneCol) {
+    $sql .= ", phone";
+} else {
+    $sql .= ", NULL as phone";
+}
+if ($hasCreatedAtCol) {
+    $sql .= ", created_at";
+} else {
+    $sql .= ", NULL as created_at";
+}
+$sql .= " FROM users WHERE role != 'super_admin' ORDER BY role, username";
+
 // Get all admin users except super admin
-$stmt = $pdo->query("SELECT id, username, role, last_login, profiles_viewed FROM users WHERE role != 'super_admin' ORDER BY role, username");
+$stmt = $pdo->query($sql);
 $users = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -84,8 +144,10 @@ $users = $stmt->fetchAll();
                                 <tr>
                                     <th>Username</th>
                                     <th>Role</th>
+                                    <?php if ($hasCreatedAtCol): ?><th>Created Date</th><?php endif; ?>
                                     <th>Last Login</th>
-                                    <th>Profiles Viewed</th>
+                                    <?php if ($hasProfilesViewedCol): ?><th>Profiles Viewed</th><?php endif; ?>
+                                    <th>Mobile Number</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -96,9 +158,14 @@ $users = $stmt->fetchAll();
                                     <td><span class="badge bg-<?php echo $user['role'] === 'manager' ? 'info' : 'warning'; ?>">
                                         <?php echo ucfirst($user['role']); ?>
                                     </span></td>
+                                    <?php if ($hasCreatedAtCol): ?><td><?php echo $user['created_at'] ? date('Y-m-d H:i', strtotime($user['created_at'])) : 'N/A'; ?></td><?php endif; ?>
                                     <td><?php echo $user['last_login'] ? date('Y-m-d H:i', strtotime($user['last_login'])) : 'Never'; ?></td>
-                                    <td><?php echo $user['profiles_viewed']; ?></td>
+                                    <?php if ($hasProfilesViewedCol): ?><td><?php echo $user['profiles_viewed'] ?? '0'; ?></td><?php endif; ?>
+                                    <td><?php echo !empty($user['phone']) ? htmlspecialchars($user['phone']) : '-'; ?></td>
                                     <td>
+                                        <button class="btn btn-sm btn-info" onclick="editUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username']); ?>', '<?php echo htmlspecialchars($user['phone'] ?? ''); ?>')">
+                                            Edit
+                                        </button>
                                         <button class="btn btn-sm btn-warning" onclick="resetPassword(<?php echo $user['id']; ?>)">
                                             Reset Password
                                         </button>
@@ -141,6 +208,10 @@ $users = $stmt->fetchAll();
                                 <option value="support">Support</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Mobile Number (Optional)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter mobile number">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -151,8 +222,45 @@ $users = $stmt->fetchAll();
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="manage_user.php" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit_user_id" name="user_id">
+                        <div class="mb-3">
+                            <label for="edit_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="edit_username" name="username" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_phone" class="form-label">Mobile Number</label>
+                            <input type="tel" class="form-control" id="edit_phone" name="phone" placeholder="Enter mobile number">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="action" value="edit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    function editUser(userId, username, phone) {
+        document.getElementById('edit_user_id').value = userId;
+        document.getElementById('edit_username').value = username;
+        document.getElementById('edit_phone').value = phone;
+        var editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        editModal.show();
+    }
+
     function resetPassword(userId) {
         if (confirm('Are you sure you want to reset this user\'s password?')) {
             window.location.href = `manage_user.php?action=reset&id=${userId}`;

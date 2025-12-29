@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $username = trim($_POST['username']);
         $password = trim($_POST['password']);
         $role = $_POST['role'];
+        $phone = trim($_POST['phone'] ?? ''); // Optional phone number
 
         // Validate role
         if (!in_array($role, ['manager', 'support'])) {
@@ -27,11 +28,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             die('Username already exists');
         }
 
-        // Add new user
-        $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
-        $stmt->execute([$username, md5($password), $role]);
+        // Check if phone column exists
+        $colStmt = $pdo->query("SHOW COLUMNS FROM users");
+        $cols = $colStmt->fetchAll(PDO::FETCH_ASSOC);
+        $colNames = array_column($cols, 'Field');
+        $hasPhoneCol = in_array('phone', $colNames);
+
+        // Add new user - conditionally include phone if column exists
+        if ($hasPhoneCol && !empty($phone)) {
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, phone) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$username, md5($password), $role, $phone]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+            $stmt->execute([$username, md5($password), $role]);
+        }
 
         header('Location: admin_dashboard.php?success=created');
+        exit();
+    }
+    
+    if ($_POST['action'] === 'edit') {
+        $userId = $_POST['user_id'];
+        $phone = trim($_POST['phone'] ?? '');
+
+        // Check if phone column exists
+        $colStmt = $pdo->query("SHOW COLUMNS FROM users");
+        $cols = $colStmt->fetchAll(PDO::FETCH_ASSOC);
+        $colNames = array_column($cols, 'Field');
+        $hasPhoneCol = in_array('phone', $colNames);
+
+        // Update user phone if column exists
+        if ($hasPhoneCol) {
+            $stmt = $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?");
+            $stmt->execute([$phone, $userId]);
+        }
+
+        header('Location: admin_dashboard.php?success=updated');
         exit();
     }
 }
