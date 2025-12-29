@@ -347,8 +347,7 @@ $districtsMap = [
             <?php endif; ?>
         </div>
 
-        <!-- Filter Form - Admin & Manager Only -->
-        <?php if (getUserRole() !== 'support'): ?>
+        <!-- Filter Form - All Users -->
         <div class="card mb-4">
             <div class="card-body">
                 <form method="GET" class="row g-3">
@@ -543,7 +542,8 @@ $districtsMap = [
                         </div>
                     </div>
 
-                    <!-- Row 3: தோசம் (Dosham)/ நட்சத்திரம் (Nakshatram)/ வசிக்கும் ஊர் -->
+                    <?php if (getUserRole() !== 'support'): ?>
+                    <!-- Row 3: தோசம் (Dosham)/ நட்சத்திரம் (Nakshatram)/ வசிக்கும் ஊர் - Admin & Manager Only -->
                     <div class="col-md-4">
                         <label class="form-label">தோசம் (Dosham)</label>
                         <div class="district-dropdown dropdown">
@@ -605,7 +605,7 @@ $districtsMap = [
                                placeholder="உங்கள் ஊரின் பெயரை உள்ளிடவும்">
                     </div>
 
-                    <!-- Row 4: பெயர்/ ID முதல் ID வரை / போன் -->
+                    <!-- Row 4: பெயர்/ ID முதல் ID வரை / போன் - Admin & Manager Only -->
                     <div class="col-md-4">
                         <label for="name" class="form-label">பெயர்</label>
                         <input type="text" class="form-control" id="name" name="name" 
@@ -632,6 +632,7 @@ $districtsMap = [
                                value="<?php echo htmlspecialchars($phone); ?>" 
                                placeholder="Search mobile...">
                     </div>
+                    <?php endif; ?>
 
                     <!-- Submit Button Row -->
                     <div class="col-12">
@@ -641,7 +642,7 @@ $districtsMap = [
                 </form>
             </div>
         </div>
-        <?php endif; ?>  <!-- End of admin & manager only filter form -->
+        <!-- End of filter form -->
         <div class="table-responsive">
             <?php
                 // Calculate displayed range for the results
