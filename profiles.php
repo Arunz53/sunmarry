@@ -727,8 +727,10 @@ $districtsMap = [
                             <?php if (getUserRole() === 'super_admin' || getUserRole() === 'manager'): ?>
                                 <a href="edit.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-warning">திருத்து</a>
                             <?php endif; ?>
-                            <?php if (getUserRole() === 'super_admin'): ?>
+                            <?php if (getUserRole() === 'super_admin' || getUserRole() === 'support'): ?>
                                 <a href="print.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-secondary">பிரிண்ட்</a>
+                            <?php endif; ?>
+                            <?php if (getUserRole() === 'super_admin'): ?>
                                 <!-- Delete form: uses POST and a JS confirmation to avoid accidental deletes -->
                                 <form method="POST" action="delete.php" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this profile? This cannot be undone.');">
                                     <input type="hidden" name="id" value="<?php echo $profile['id']; ?>">
@@ -736,7 +738,6 @@ $districtsMap = [
                                 </form>
                             <?php endif; ?>
                             <?php if (getUserRole() === 'super_admin' || getUserRole() === 'manager' || getUserRole() === 'support'): ?>
-                                <a href="print.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-secondary">பிரிண்ட்</a>
                                 <a href="print2.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-secondary">No Phone PDF</a>
                             <?php endif; ?>
                         </td>
