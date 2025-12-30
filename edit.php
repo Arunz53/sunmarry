@@ -621,6 +621,7 @@ $districtsMap = [
                 </div>
 
                 <!-- 22-24. Phones -->
+                <?php if (getUserRole() !== 'manager'): ?>
                 <div class="col-md-4 mb-3">
                     <label for="phone1" class="form-label">தொலைபேசி 1</label>
                     <input type="tel" class="form-control" id="phone1" name="phone1" value="<?php echo htmlspecialchars($profile['phone_primary'] ?? ''); ?>">
@@ -633,6 +634,7 @@ $districtsMap = [
                     <label for="phone3" class="form-label">குறிப்பு</label>
                     <input type="tel" class="form-control" id="phone3" name="phone3" value="<?php echo htmlspecialchars($profile['phone_tertiary'] ?? ''); ?>">
                 </div>
+                <?php endif; ?>
 
                 <!-- 25. Profile photo -->
                 <div class="col-md-6 mb-3">
