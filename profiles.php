@@ -335,14 +335,15 @@ $districtsMap = [
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>சுயவிவரங்களை காண்</h2>
-            <?php if (getUserRole() === 'support'): 
+            <?php if (getUserRole() === 'support'):
                 $pdo = getDB();
-                $stmt = $pdo->prepare("SELECT profiles_viewed FROM users WHERE id = ?");
-                $stmt->execute([$_SESSION['user_id']]);
-                $user = $stmt->fetch();
+                $user_id = $_SESSION['user_id'];
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM support_profile_views WHERE user_id = ?");
+                $stmt->execute([$user_id]);
+                $uniqueViews = $stmt->fetchColumn();
             ?>
                 <div class="alert alert-info mb-0">
-                    பார்வையிட்ட சுயவிவரங்கள்: <strong><?php echo $user['profiles_viewed']; ?>/10</strong>
+                    பார்வையிட்ட சுயவிவரங்கள்: <strong><?php echo $uniqueViews; ?>/20</strong>
                 </div>
             <?php endif; ?>
         </div>
@@ -643,6 +644,7 @@ $districtsMap = [
             </div>
         </div>
         <!-- End of filter form -->
+        <?php if (!empty($_GET)): ?>
         <div class="table-responsive">
             <?php
                 // Calculate displayed range for the results
@@ -738,6 +740,7 @@ $districtsMap = [
                             <?php endif; ?>
                         </td>
                     </tr>
+
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -763,7 +766,8 @@ $districtsMap = [
             </ul>
         </nav>
         <?php endif; ?>
-    </div>
+        </div>
+        <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

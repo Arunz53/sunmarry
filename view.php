@@ -277,10 +277,11 @@ $districtsMap = [
                             <div class="alert alert-info mt-3">
                                 <?php
                                 require_once 'db.php';
-                                $stmt = $pdo->prepare("SELECT profiles_viewed FROM users WHERE id = ?");
-                                $stmt->execute([$_SESSION['user_id']]);
-                                $user = $stmt->fetch();
-                                echo "பார்வையிட்ட சுயவிவரங்கள்: " . $user['profiles_viewed'] . "/10";
+                                $user_id = $_SESSION['user_id'];
+                                $stmt = $pdo->prepare("SELECT COUNT(*) FROM support_profile_views WHERE user_id = ?");
+                                $stmt->execute([$user_id]);
+                                $uniqueViews = $stmt->fetchColumn();
+                                echo "பார்வையிட்ட சுயவிவரங்கள்: $uniqueViews/20";
                                 ?>
                             </div>
                             <?php endif; ?>

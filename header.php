@@ -38,12 +38,13 @@ require_once 'auth.php';
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'support'): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="#">
-                        Profiles: <?php
-                            require_once 'db.php';
-                            $stmt = $pdo->prepare("SELECT profiles_viewed FROM users WHERE id = ?");
-                            $stmt->execute([$_SESSION['user_id']]);
-                            $user = $stmt->fetch();
-                            echo $user['profiles_viewed'] . "/10";
+                        <?php
+                        require_once 'db.php';
+                        $user_id = $_SESSION['user_id'];
+                        $stmt = $pdo->prepare("SELECT COUNT(*) as cnt FROM support_profile_views WHERE user_id = ?");
+                        $stmt->execute([$user_id]);
+                        $uniqueViews = $stmt->fetchColumn();
+                        echo "Profiles: $uniqueViews/20";
                         ?>
                     </a>
                 </li>
