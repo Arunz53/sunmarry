@@ -2,8 +2,8 @@
 require_once 'auth.php';
 requireLogin();
 
-// Only allow super_admin and manager roles
-if (getUserRole() === 'support') {
+// Allow super_admin, manager, and support roles
+if (getUserRole() === null || (getUserRole() !== 'super_admin' && getUserRole() !== 'manager' && getUserRole() !== 'support')) {
     header('Location: access_denied.php');
     exit();
 }$id = $_GET['id'] ?? null;
@@ -296,8 +296,9 @@ body { font-weight: 600; }
 
 <div class="print-layout">
     <div class="header">
-        <img src="SunLogo.png" alt="Company Logo" style="max-height:36px;">
-        <p>www.sunmatri.in | +91 86400 90400 | +91 63793 99175</p>
+        
+        <p>சன் மேட்ரிமோனி | www.sunmatri.in | +91 86400 90400 | +91 63793 99175 | +91 82480 55207 | +91 97917 81651</p>
+        
         <p>Profile ID: <strong><?php echo htmlspecialchars($profile['id']); ?></strong></p>
     </div>
 
