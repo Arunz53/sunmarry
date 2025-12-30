@@ -735,7 +735,8 @@ $districtsMap = [
                                     <button type="submit" class="btn btn-sm btn-danger">அழி</button>
                                 </form>
                             <?php endif; ?>
-                            <?php if (getUserRole() === 'super_admin' || getUserRole() === 'manager'): ?>
+                            <?php if (getUserRole() === 'super_admin' || getUserRole() === 'manager' || getUserRole() === 'support'): ?>
+                                <a href="print.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-secondary">பிரிண்ட்</a>
                                 <a href="print2.php?id=<?php echo $profile['id']; ?>" class="btn btn-sm btn-secondary">No Phone PDF</a>
                             <?php endif; ?>
                         </td>
